@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+ <mapper namespace="net.musicrecommend.www.operation.OperationMapper">
+ 
+ 	<!-- 아티스트 관련 -->
+ 	<insert id="insertArtist" parameterType="ArtistVO">
+ 		insert into tb_artist(artist_key, genre_names, act_type_name, sex, artist_name,nationality_name, artist_img)
+ 		values(#{artist_key}, #{genre_names}, #{act_type_name}, #{sex}, #{artist_name},#{nationality_name}, #{artist_img})	
+ 	</insert> 
+ 	
+ 	<update id="updateArtist" parameterType="ArtistVO">
+ 	update tb_artist set artist_key=#{artist_key}, genre_names=#{genre_names}, act_type_name=#{act_type_name}, sex=#{sex}, artist_name=#{artist_name},nationality_name=#{nationality_name}, artist_img=#{artist_img}
+ 		where artist_key = #{artist_key}
+ 	</update>
+ 	
+ 	<select id="checkArtistId" parameterType="ArtistVO" resultType="Integer">
+ 		select count('artist_no') as cnt 
+ 		from tb_artist
+ 		where artist_key = #{artist_key}
+ 	</select>
+ 	
+ 	
+ 	<!-- 앨범 관련 -->	
+ 	<select id="checkAlbumId" parameterType="AlbumVO" resultType="Integer">
+ 		select count('album_no') as cnt 
+ 		from tb_album
+ 		where album_key = #{album_key}
+ 	</select>
+ 	
+ 	<insert id="insertAlbum" parameterType="AlbumVO">
+ 		insert into tb_album(album_key, artist_key, album_name,artist_name, average_score, issue_date, album_img)
+ 		values(#{album_key}, #{artist_key}, #{album_name},#{artist_name}, #{average_score}, #{issue_date}, #{album_img})	
+ 	</insert>
+ 	
+ 	<update id="updateAlbum" parameterType="AlbumVO">
+ 		update tb_album set album_key=#{album_key}, artist_key=#{artist_key}, album_name=#{album_name},artist_name=#{artist_name}, average_score=#{average_score}, issue_date=#{issue_date}, album_img=#{album_img}
+ 		where album_key = #{album_key} 			
+ 	</update> 	
+ 	
+ 	<!-- 은석 -->
+ 	<!--  노래 관련 -->
+ 	<insert id="insertSong" parameterType="SongVO">
+ 		insert into tb_song(song_key, album_key, song_name, play_time, issue_date, is_title_song,is_adult,is_hit_song ,is_free,artist_key,artist_name,composition,lyricist,album_img,album_name)
+ 		values(#{song_key},#{ album_key},#{ song_name},#{ play_time},#{ issue_date},#{ is_title_song},#{is_adult},#{is_hit_song },#{is_free},#{artist_key},#{artist_name},#{composition},#{lyricist},#{album_img},#{album_name})
+ 	</insert>
+ 	<update id="updateSong" parameterType="SongVO">
+ 		update tb_song set song_key=#{song_key}, album_key=#{album_key}, song_name=#{song_name}, play_time=#{play_time}, issue_date=#{issue_date}, is_title_song=#{is_title_song},is_adult=#{is_adult},is_hit_song=#{is_hit_song} ,is_free=#{is_free},artist_key=#{artist_key},artist_name=#{artist_name},composition=#{composition},lyricist=#{lyricist},album_img=#{album_img}
+ 		where song_key = #{song_key} 
+ 	</update>
+ 	
+ 	<select id="checkSong" parameterType="Long" resultType="Long">
+ 		select count(song_key)
+		from tb_song
+		where song_key = #{song_key}
+ 	</select>	 	
+ 	
+ 	<select id="getGenreList" resultType="GenreVO">
+ 		select *
+ 		from tb_genre
+ 	</select>
+ 	<select id="getImageList" resultType="String">
+ 		select album_img
+ 		from tb_song order by rand() limit 30
+ 	</select>
+ 	
+ 	<select id="getSongList" resultType="SongVO">
+ 		select * 
+ 		from tb_song
+ 	</select>
+ 	
+ 	<select id="getAlbumList" resultType="AlbumVO">
+ 		select *
+ 		from tb_album
+ 	</select>
+ 	
+ 	<select id="getSongChartList" resultType="SongChartVO">
+ 		select *
+ 		from tb_song
+ 	</select>
+ 	
+ 	<select id="getAlbumChartList" resultType="AlbumChartVO">
+ 		select *
+ 		from tb_album
+ 	</select>
+ 	
+ 	<!-- 검색어 저장 -->
+ 	<insert id="insertSearchKeyword" parameterType="String">
+ 		insert into tb_keyword( keyword, count)
+ 		values(#{searchKeyword},count +1)
+ 	</insert>
+ 	<!-- 검색어 있나? -->
+ 	<select id="getKeyword" parameterType="String" resultType="KeywordVO">
+ 		select keyword,regdate from tb_keyword where keyword = #{searchKeyword}
+ 	</select>
+ 	<!-- 검색어 수정 -->
+ 	<update id="updateSearchKeyword" parameterType="String">
+ 		update tb_keyword set count = count+1 where keyword = #{searchKeyword}
+ 	</update>
+ 	<delete id="deleteSearchKeyword" parameterType="String">
+ 		delete from tb_keyword where keyword=#{keyword}
+ 	</delete>
+ 	
+ 	<select id="getUserSongList" parameterType="java.util.HashMap" resultType="SongVO">
+ 		select q.*
+		from (select @RNUM := @RNUM + 1 as rownum, a.*
+				from (select distinct s.song_key, s.song_name,r.recommend_no, s.album_key, s.artist_key, s.artist_name, s.play_time, s.issue_date, s.is_title_song, s.is_hit_song, s.is_adult, s.is_free, s.composition, s.lyricist, s.album_name, s.album_img, s.genre_names
+					from tb_recommend r join tb_song s 
+					on r.song_key = s.song_key
+					where r.user_no = #{user_no}
+					order by recommend_no desc) a join (select @RNUM := 0) m) q
+		where rownum between #{pgNation.start_num} and #{pgNation.end_num}
+ 	</select>
+ 	
+ </mapper>
+ 
+ 

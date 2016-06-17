@@ -1,0 +1,571 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="net.musicrecommend.www.starpoint.StarpointMapper">
+
+	<!-- 장르이름 가져오기 -->
+	<!-- <select id="getGenrename" resultType="GenreVO">
+	select * 
+	from tb_genre	
+	</select> -->
+
+	<!-- 평균평점TOP 갯수 -->
+	<select id="topsongCount" parameterType="String" resultType="long">
+	select count(*)
+	from tb_song
+	where song_key in (select song_key
+				  	  from tb_recommend
+				  	  where user_no not in (select user_no
+					          		  			  from tb_user
+					     			  			  where user_id = #{user_id})
+					   group by song_key
+					   having avg(star_point)>=4.0)   
+	</select>
+	<!-- 평균평점TOP 출력 -->
+	<select id="topsongList" parameterType="java.util.Map" resultType="SongVO">
+	select A.*
+	from (select @rownum:=@rownum+1 as rownum, s.*	
+		  from tb_song s join (select @rownum := 0) r
+		  where song_key in (select song_key
+							from tb_recommend
+				  	  		where user_no not in (select user_no
+					          		  			  from tb_user
+					     			  			  where user_id = #{user_id})
+					   		group by song_key
+					   		having avg(star_point)>=4.0) 					    
+		 order by issue_date desc)A
+	where rownum between #{start_num} and #{end_num}	
+	</select>
+
+	<!-- 히트곡 갯수 -->
+	<select id="hitsongCount" parameterType="String" resultType="long">
+	select count(*)
+	from tb_song
+	where is_hit_song = true
+	and song_key in (select song_key
+						from tb_recommend
+						where user_no not in (select user_no
+										from tb_user
+										where user_id = #{user_id}))
+	</select>
+	<!-- 히트곡 출력 -->
+	<select id="hitsongList" parameterType="java.util.Map" resultType="SongVO">
+	select A.*
+	from (select @rownum:=@rownum+1 as rownum, s.*
+	 	  from tb_song s join (select @rownum := 0) r
+		  where is_hit_song = true
+   	      and song_key in (select song_key
+							   from tb_recommend
+							    where user_no not in (select user_no
+												 from tb_user
+												 where user_id = #{user_id}))
+		order by issue_date desc)A										 
+	where rownum between #{start_num} and #{end_num}
+	</select>
+	
+	<!-- 타이틀곡 갯수 -->
+	<select id="titlesongCount" parameterType="String" resultType="long">
+	select count(*)
+	from tb_song
+	where is_title_song = true
+	and song_key in (select song_key
+					from tb_recommend
+					where user_no not in (select user_no
+										  from tb_user
+										  where user_id = #{user_id}))
+	</select>
+	<!-- 타이틀곡 출력 -->
+	<select id="titlesongList" parameterType="java.util.Map" resultType="SongVO">
+	select A.*
+	from (select @rownum:=@rownum+1 as rownum, s.*
+	 	  from tb_song s join (select @rownum := 0) r
+		  where is_title_song = true
+   	      and song_key in (select song_key
+						   from tb_recommend
+							where user_no not in (select user_no
+												 from tb_user
+												 where user_id = #{user_id}))
+		 order by issue_date desc)A											 
+	where rownum between #{start_num} and #{end_num}
+	</select>
+	
+	<!--무료곡 갯수 -->
+	<select id="freesongCount" parameterType="String" resultType="long">
+	select count(*)
+	from tb_song
+	where is_free = true
+	and song_key in (select song_key
+				    from tb_recommend
+					where user_no not in (select user_no
+										  from tb_user
+										  where user_id = #{user_id}))
+	</select>
+	<!-- 무료곡 출력 -->
+	<select id="freesongList" parameterType="java.util.Map" resultType="SongVO">
+	select A.*
+	from (select @rownum:=@rownum+1 as rownum, s.*
+	 	  from tb_song s join (select @rownum := 0) r
+		  where is_free = true
+   	      and song_key in (select song_key
+						   from tb_recommend
+						   where user_no not in (select user_no
+												 from tb_user
+												 where user_id = #{user_id}))
+		 order by issue_date desc)A											 
+	where rownum between #{start_num} and #{end_num}
+	</select>
+	
+	<!--댄스 갯수 -->
+	<select id="danceCount" parameterType="String" resultType="long">
+	select count(*)
+	from tb_song
+	where artist_key in (select artist_key				
+						from tb_artist					
+						where artist_key in (select artist_key
+				    						from tb_recommend
+							    			 where user_no not in (select user_no
+													 			      from tb_user
+													 			      where user_id = #{user_id}))
+						and genre_names like '%Dance%') 
+	</select>
+	<!-- 댄스 출력 -->
+	<select id="danceList" parameterType="java.util.Map" resultType="SongVO">
+	select A.*
+	from (select @rownum:=@rownum+1 as rownum, s.*
+	 	  from tb_song s join (select @rownum := 0) r	
+		  where artist_key in (select artist_key				
+			                	from tb_artist					
+								where artist_key in (select artist_key
+				    							 	from tb_recommend
+							    					where user_no not in (select user_no
+													 			  		  from tb_user
+													 			  		  where user_id = #{user_id}))
+								and genre_names like '%Dance%') 						  
+		  order by issue_date desc)A			  	 									 
+	where rownum between #{start_num} and #{end_num}
+	</select>
+	
+	<!--발라드 갯수 -->
+	<select id="balladCount" parameterType="String" resultType="long">
+	select count(*)
+	from tb_song
+	where artist_key in (select artist_key				
+						from tb_artist					
+						where artist_key in (select artist_key
+				    						from tb_recommend
+							    			where user_no not in (select user_no
+													 			  from tb_user
+													 			  where user_id = #{user_id}))
+						and genre_names like '%Ballad%') 
+	</select>	
+	<!-- 발라드 출력 -->
+	<select id="balladList" parameterType="java.util.Map" resultType="SongVO">
+	select A.*
+	from (select @rownum:=@rownum+1 as rownum, s.*
+	 	  from tb_song s join (select @rownum := 0) r	
+		  where artist_key in (select artist_key				
+			                	from tb_artist					
+								where artist_key in (select artist_key
+				    							 	from tb_recommend
+							    					where user_no not in (select user_no
+													 			  		  from tb_user
+													 			  		  where user_id = #{user_id}))
+								and genre_names like '%Ballad%') 						  
+		  order by issue_date desc)A			  	 									 
+	where rownum between #{start_num} and #{end_num}
+	</select>
+	
+	<!--POP 갯수 -->
+	<select id="popCount" parameterType="String" resultType="long">
+	select count(*)
+	from tb_song
+	where artist_key in (select artist_key				
+						from tb_artist					
+						where artist_key in (select artist_key
+				    						from tb_recommend
+							    			where user_no not in (select user_no
+													 			  from tb_user
+													 			  where user_id = #{user_id}))
+						and genre_names like '%Pop%') 
+	</select>
+	<!-- POP 출력 -->
+	<select id="popList" parameterType="java.util.Map" resultType="SongVO">
+	select A.*
+	from (select @rownum:=@rownum+1 as rownum, s.*
+	 	  from tb_song s join (select @rownum := 0) r	
+		  where artist_key in (select artist_key				
+			                	from tb_artist					
+								where artist_key in (select artist_key
+				    							 	from tb_recommend
+							    					where user_no not in (select user_no
+													 			  		  from tb_user
+													 			  		  where user_id = #{user_id}))
+								and genre_names like '%Pop%') 						  
+		  order by issue_date desc)A			  	 									 
+	where rownum between #{start_num} and #{end_num}
+	</select>	
+	
+	<!--영화 갯수 -->
+	<select id="movieCount" parameterType="String" resultType="long">
+	select count(*)
+	from tb_song
+	where artist_key in (select artist_key				
+						from tb_artist					
+						where artist_key in (select artist_key
+				    							 from tb_recommend
+							    				 where user_no not in (select user_no
+													 			  		from tb_user
+													 			  		where user_id = #{user_id}))
+						and genre_names like '%Movie%') 
+	</select>
+	<!-- 영화 출력 -->
+	<select id="movieList" parameterType="java.util.Map" resultType="SongVO">
+	select A.*
+	from (select @rownum:=@rownum+1 as rownum, s.*
+	 	  from tb_song s join (select @rownum := 0) r	
+		  where artist_key in (select artist_key				
+			                	from tb_artist					
+								where artist_key in (select artist_key
+				    							 	from tb_recommend
+							    					where user_no not in (select user_no
+													 			  		  from tb_user
+													 			  		  where user_id = #{user_id}))
+								and genre_names like '%Movie%') 						  
+		  order by issue_date desc)A			  	 									 
+	where rownum between #{start_num} and #{end_num}
+	</select>	
+	
+	<!--드라마 갯수 -->
+	<select id="dramaCount" parameterType="String" resultType="long">
+	select count(*)
+	from tb_song
+	where artist_key in (select artist_key				
+						from tb_artist					
+						where artist_key in (select artist_key
+				    						from tb_recommend
+							    			where user_no not in (select user_no
+													 			  from tb_user
+													 			  where user_id = #{user_id}))
+						and genre_names like '%Drama%') 
+	</select>
+	<!-- 드라마 출력 -->
+	<select id="dramaList" parameterType="java.util.Map" resultType="SongVO">
+	select A.*
+	from (select @rownum:=@rownum+1 as rownum, s.*
+	 	  from tb_song s join (select @rownum := 0) r	
+		  where artist_key in (select artist_key				
+			                	from tb_artist					
+								where artist_key in (select artist_key
+				    							 	from tb_recommend
+							    					where user_no not in (select user_no
+													 			  		  from tb_user
+													 			  		  where user_id = #{user_id}))
+								and genre_names like '%Drama%') 						  
+		  order by issue_date desc)A			  	 									 
+	where rownum between #{start_num} and #{end_num}
+	</select>
+	
+	<!--애니메이션 갯수 -->
+	<select id="animationCount" parameterType="String" resultType="long">
+	select count(*)
+	from tb_song
+	where artist_key in (select artist_key				
+						from tb_artist					
+						where artist_key in (select artist_key
+				    						from tb_recommend
+							    			where user_no not in (select user_no
+													 			  from tb_user
+													 			  where user_id = #{user_id}))
+						and genre_names like '%Animation%') 
+	</select>
+	<!-- 애니메이션 출력 -->
+	<select id="animationList" parameterType="java.util.Map" resultType="SongVO">
+	select A.*
+	from (select @rownum:=@rownum+1 as rownum, s.*
+	 	  from tb_song s join (select @rownum := 0) r	
+		  where artist_key in (select artist_key				
+			                	from tb_artist					
+								where artist_key in (select artist_key
+				    							 	from tb_recommend
+							    					where user_no not in (select user_no
+													 			  		  from tb_user
+													 			  		  where user_id = #{user_id}))
+								and genre_names like '%Animation%') 						  
+		  order by issue_date desc)A			  	 									 
+	where rownum between #{start_num} and #{end_num}
+	</select>
+	
+	<!--뮤지컬 갯수 -->
+	<select id="musicalCount" parameterType="String" resultType="long">
+	select count(*)
+	from tb_song
+	where artist_key in (select artist_key				
+						from tb_artist					
+						where artist_key in (select artist_key
+				    						from tb_recommend
+							    			where user_no not in (select user_no
+													 			  from tb_user
+													 			  where user_id = #{user_id}))
+						and genre_names like '%Musical%') 
+	</select>
+	<!-- 뮤지컬 출력 -->
+	<select id="musicalList" parameterType="java.util.Map" resultType="SongVO">
+	select A.*
+	from (select @rownum:=@rownum+1 as rownum, s.*
+	 	  from tb_song s join (select @rownum := 0) r	
+		  where artist_key in (select artist_key				
+			                	from tb_artist					
+								where artist_key in (select artist_key
+				    							 	from tb_recommend
+							    					where user_no not in (select user_no
+													 			  		  from tb_user
+													 			  		  where user_id = #{user_id}))
+								and genre_names like '%Musical%') 						  
+		  order by issue_date desc)A			  	 									 
+	where rownum between #{start_num} and #{end_num}
+	</select>
+	
+	<!--일렉트로니카 갯수 -->
+	<select id="electronicaCount" parameterType="String" resultType="long">
+	select count(*)
+	from tb_song
+	where artist_key in (select artist_key				
+						from tb_artist					
+						where artist_key in (select artist_key
+				    						from tb_recommend
+							    			where user_no not in (select user_no
+													 			  from tb_user
+													 			  where user_id = #{user_id}))
+						and genre_names like '%Electronica%') 
+	</select>
+	<!-- 일렉트로니카 출력 -->
+	<select id="electronicaList" parameterType="java.util.Map" resultType="SongVO">
+	select A.*
+	from (select @rownum:=@rownum+1 as rownum, s.*
+	 	  from tb_song s join (select @rownum := 0) r	
+		  where artist_key in (select artist_key				
+			                	from tb_artist					
+								where artist_key in (select artist_key
+				    							 	from tb_recommend
+							    					where user_no not in (select user_no
+													 			  		  from tb_user
+													 			  		  where user_id = #{user_id}))
+								and genre_names like '%Electronica%') 						  
+		  order by issue_date desc)A			  	 									 
+	where rownum between #{start_num} and #{end_num}
+	</select>
+	
+	<!--락 갯수 -->
+	<select id="rockCount" parameterType="String" resultType="long">
+	select count(*)
+	from tb_song
+	where artist_key in (select artist_key				
+						from tb_artist					
+						where artist_key in (select artist_key
+				    						from tb_recommend
+							    			where user_no not in (select user_no
+													 			  from tb_user
+													 			  where user_id = #{user_id}))
+						and genre_names like '%Rock%') 
+	</select>
+	<!-- 락 출력 -->
+	<select id="rockList" parameterType="java.util.Map" resultType="SongVO">
+	select A.*
+	from (select @rownum:=@rownum+1 as rownum, s.*
+	 	  from tb_song s join (select @rownum := 0) r	
+		  where artist_key in (select artist_key				
+			                	from tb_artist					
+								where artist_key in (select artist_key
+				    							 	from tb_recommend
+							    					where user_no not in (select user_no
+													 			  		  from tb_user
+													 			  		  where user_id = #{user_id}))
+								and genre_names like '%Rock%') 						  
+		  order by issue_date desc)A			  	 									 
+	where rownum between #{start_num} and #{end_num}
+	</select>
+	
+	<!--R&B / Soul 갯수 -->
+	<select id="soulCount" parameterType="String" resultType="long">
+	select count(*)
+	from tb_song
+	where artist_key in (select artist_key				
+						from tb_artist					
+						where artist_key in (select artist_key
+				    						from tb_recommend
+							    			where user_no not in (select user_no
+													 			  from tb_user
+													 			  where user_id = #{user_id}))
+						and genre_names like '%Soul%') 
+	</select>
+	<!-- R&B / Soul 출력 -->
+	<select id="soulList" parameterType="java.util.Map" resultType="SongVO">
+	select A.*
+	from (select @rownum:=@rownum+1 as rownum, s.*
+	 	  from tb_song s join (select @rownum := 0) r	
+		  where artist_key in (select artist_key				
+			                	from tb_artist					
+								where artist_key in (select artist_key
+				    							 	from tb_recommend
+							    					where user_no not in (select user_no
+													 			  		  from tb_user
+													 			  		  where user_id = #{user_id}))
+								and genre_names like '%Soul%') 						  
+		  order by issue_date desc)A			  	 									 
+	where rownum between #{start_num} and #{end_num}
+	</select>
+	
+	<!--랩/힙합 갯수 -->
+	<select id="rapCount" parameterType="String" resultType="long">
+	select count(*)
+	from tb_song
+	where artist_key in (select artist_key				
+						from tb_artist					
+						where artist_key in (select artist_key
+				    						from tb_recommend
+							    			where user_no not in (select user_no
+													 			  from tb_user
+													 			  where user_id = #{user_id}))
+						and genre_names like '%Rap%') 
+	</select>
+	<!-- 랩/힙합 출력 -->
+	<select id="rapList" parameterType="java.util.Map" resultType="SongVO">
+	select A.*
+	from (select @rownum:=@rownum+1 as rownum, s.*
+	 	  from tb_song s join (select @rownum := 0) r	
+		  where artist_key in (select artist_key				
+			                	from tb_artist					
+								where artist_key in (select artist_key
+				    							 	from tb_recommend
+							    					where user_no not in (select user_no
+													 			  		  from tb_user
+													 			  		  where user_id = #{user_id}))
+								and genre_names like '%Rap%') 						  
+		  order by issue_date desc)A			  	 									 
+	where rownum between #{start_num} and #{end_num}
+	</select>
+
+	<!--재즈 갯수 -->
+	<select id="jazzCount" parameterType="String" resultType="long">
+	select count(*)
+	from tb_song
+	where artist_key in (select artist_key				
+						from tb_artist					
+						where artist_key in (select artist_key
+				    						from tb_recommend
+							    			where user_no not in (select user_no
+													 			  from tb_user
+													 			  where user_id = #{user_id}))
+						and genre_names like '%Jazz%') 
+	</select>
+	<!-- 재즈 출력 -->
+	<select id="jazzList" parameterType="java.util.Map" resultType="SongVO">
+	select A.*
+	from (select @rownum:=@rownum+1 as rownum, s.*
+	 	  from tb_song s join (select @rownum := 0) r	
+		  where artist_key in (select artist_key				
+			                	from tb_artist					
+								where artist_key in (select artist_key
+				    							 	from tb_recommend
+							    					where user_no not in (select user_no
+													 			  		  from tb_user
+													 			  		  where user_id = #{user_id}))
+								and genre_names like '%Jazz%') 						  
+		  order by issue_date desc)A			  	 									 
+	where rownum between #{start_num} and #{end_num}
+	</select>
+	
+	<!--뉴에이지 갯수 -->
+	<select id="newageCount" parameterType="String" resultType="long">
+	select count(*)
+	from tb_song
+	where artist_key in (select artist_key				
+						from tb_artist					
+						where artist_key in (select artist_key
+				    						from tb_recommend
+							    			where user_no not in (select user_no
+													 			  from tb_user
+													 			  where user_id = #{user_id}))
+						and genre_names like '%New Age%') 
+	</select>
+	<!-- 뉴에이지 출력 -->
+	<select id="newageList" parameterType="java.util.Map" resultType="SongVO">
+	select A.*
+	from (select @rownum:=@rownum+1 as rownum, s.*
+	 	  from tb_song s join (select @rownum := 0) r	
+		  where artist_key in (select artist_key				
+			                	from tb_artist					
+								where artist_key in (select artist_key
+				    							 	from tb_recommend
+							    					where user_no not in (select user_no
+													 			  		  from tb_user
+													 			  		  where user_id = #{user_id}))
+								and genre_names like '%New Age%') 						  
+		  order by issue_date desc)A			  	 									 
+	where rownum between #{start_num} and #{end_num}
+	</select>
+	
+	<!--CCM 갯수 -->
+	<select id="ccmCount" parameterType="String" resultType="long">
+	select count(*)
+	from tb_song
+	where artist_key in (select artist_key				
+						from tb_artist					
+						where artist_key in (select artist_key
+				    						from tb_recommend
+							    			where user_no not in (select user_no
+													 			  from tb_user
+													 			  where user_id = #{user_id}))
+						and genre_names like '%CCM%') 
+	</select>
+	<!-- CCM 출력 -->
+	<select id="ccmList" parameterType="java.util.Map" resultType="SongVO">
+	select A.*
+	from (select @rownum:=@rownum+1 as rownum, s.*
+	 	  from tb_song s join (select @rownum := 0) r	
+		  where artist_key in (select artist_key				
+			                	from tb_artist					
+								where artist_key in (select artist_key
+				    							 	from tb_recommend
+							    					where user_no not in (select user_no
+													 			  		  from tb_user
+													 			  		  where user_id = #{user_id}))
+								and genre_names like '%CCM%') 						  
+		  order by issue_date desc)A			  	 									 
+	where rownum between #{start_num} and #{end_num}
+	</select>
+	
+	<!--월드뮤직 갯수 -->
+	<select id="worldCount" parameterType="String" resultType="long">
+	select count(*)
+	from tb_song
+	where artist_key in (select artist_key				
+						from tb_artist					
+						where artist_key in (select artist_key
+				    						from tb_recommend
+							    			where user_no not in (select user_no
+													 			  from tb_user
+													 			  where user_id = #{user_id}))
+						and genre_names like '%World%') 
+	</select>
+	<!-- 월드뮤직 출력 -->
+	<select id="worldList" parameterType="java.util.Map" resultType="SongVO">
+	select A.*
+	from (select @rownum:=@rownum+1 as rownum, s.*
+	 	  from tb_song s join (select @rownum := 0) r	
+		  where artist_key in (select artist_key				
+			                	from tb_artist					
+								where artist_key in (select artist_key
+				    							 	from tb_recommend
+							    					where user_no not in (select user_no
+													 			  		  from tb_user
+													 			  		  where user_id = #{user_id}))
+								and genre_names like '%World%') 						  
+		  order by issue_date desc)A			  	 									 
+	where rownum between #{start_num} and #{end_num}
+	</select>
+
+
+</mapper>

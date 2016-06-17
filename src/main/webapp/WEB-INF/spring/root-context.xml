@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+	
+	<bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+		<property name="defaultEncoding" value="UTF-8"/>
+		<property name="maxInMemorySize" value="20485760"/>
+		
+	</bean>
+	<!-- Root Context: defines shared resources visible to all other web components -->
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="datasource_mysql"/>
+		<property name="typeAliasesPackage" value="net.musicrecommend.www"/>
+	</bean>
+	
+	<!-- Mappers -->
+	<bean id="userMapper" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="sqlSessionFactory" ref="sqlSessionFactory"/>
+		<property name="mapperInterface" value="net.musicrecommend.www.user.UserMapper"/>
+	</bean>
+	
+	<bean id="operationMapper" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="sqlSessionFactory" ref="sqlSessionFactory"/>
+		<property name="mapperInterface" value="net.musicrecommend.www.operation.OperationMapper"/>
+	</bean>
+	<bean id="recommendMapper" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="sqlSessionFactory" ref="sqlSessionFactory"/>
+		<property name="mapperInterface" value="net.musicrecommend.www.recommend.RecommendMapper"/>
+	</bean>
+	
+	<bean id="artistMapper" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="sqlSessionFactory" ref="sqlSessionFactory"/>
+		<property name="mapperInterface" value="net.musicrecommend.www.music.ArtistMapper"/>
+	</bean>
+	
+	<!-- 별점 맵퍼 추가(권우)-->
+	<bean id="starpointMapper" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="sqlSessionFactory" ref="sqlSessionFactory"/>
+		<property name="mapperInterface" value="net.musicrecommend.www.starpoint.StarpointMapper"/>
+	</bean> 
+	
+	<bean id="datasource_mysql" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+		<property name="driverClassName" value="net.sf.log4jdbc.DriverSpy"/>
+		<property name="url" value="jdbc:log4jdbc:mysql://70.12.110.69:3306/daechoong_schema?useSSL=false"/>
+		<property name="username" value="daechoong"/>
+		<property name="password" value="daechoong"/>
+	</bean>
+	
+	
+	
+	
+	
+	 
+</beans>

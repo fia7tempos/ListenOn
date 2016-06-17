@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="net.musicrecommend.www.user.UserMapper">
+	<insert id="insertUser" parameterType="UserVO">
+		insert into tb_user(user_id, user_pw, user_nick, user_uuid)
+		values(#{user_id},#{user_pw},#{user_nick},#{user_uuid});
+	</insert>
+
+	<select id="getUserTotalCount" resultType="int">
+		select count(*) as cnt
+		from tb_user
+	</select>
+
+	<select id="selectUserList" resultType="UserVO" parameterType="PageNation">
+		select b.*
+		from (select a.*
+		from (select @rownum:=@rownum+1 as rownum, u.*
+		from tb_user u join (select @rownum:=0) T
+		order by u.user_no desc) a) b
+		where rownum between #{start_num} and
+		#{end_num};
+	</select>
+	
+	<!-- 아이디 중복체크 -->
+	<select id="idCheck" parameterType="String" resultType="Integer">
+		select count(user_id)
+		from tb_user
+		where user_id=#{user_id}
+	</select>
+	<!-- 로그인 계정확인 -->
+	<select id="checkUser" parameterType="UserVO" resultType="UserVO">
+		select
+		user_id, user_nick, user_uuid
+		from tb_user
+		where user_id=#{user_id} and
+		user_pw=#{user_pw}
+	</select>
+
+	<!-- 카카오 계정 저장 전 중복체크 -->
+	<select id="checkCacaoUser" parameterType="UserVO" resultType="Integer">
+		select count(user_id)
+		from tb_user
+		where user_id=#{user_id}
+	</select>
+	<!-- 카카오 계정 저장 -->
+	<insert id="insertCacaoUser" parameterType="UserVO">
+		insert into
+		tb_user(user_id, user_nick, user_img)
+		values(#{user_id},#{user_nick},#{user_img})
+	</insert>
+	
+	<select id="getUserNo" parameterType="String" resultType="long">
+		select user_no
+		from tb_user
+		where user_id = #{user_id}
+	</select>
+	
+	<select id="getPrefer_Artist" resultType="PerferArtistVO">
+		select artist_name, artist_key, count(artist_name) as cnt
+		from tb_song
+		where song_key in (select song_key
+						   from tb_recommend
+						   where user_no = #{user_no})
+		group by artist_name, artist_key
+		order by cnt desc
+		limit 10
+	</select>
+	<!-- 유저별 선호장르 -->
+	<select id="getUserPrefGenre" parameterType="Long" resultType="String">
+		select a.genre_names from tb_recommend r
+		join tb_artist a on r.artist_key = a.artist_key 
+		where r.user_no = #{user_no}
+	</select>
+	<!-- 유저별 별점평균 -->
+	<select id="getUserAvgStars" resultType="StarPointVO" parameterType="long">
+	select star_point, count(user_no) as cnt 
+	from tb_recommend
+	where user_no = #{user_no}
+	group by star_point 
+	order by cnt desc
+	</select>
+	<!-- 유저별 음악 플레이시간 -->
+	<select id="getUserPlaytime" parameterType="long" resultType="long">
+		select count(user_no) as cnt from tb_recommend
+		where user_no = #{user_no}
+	</select>
+	<!-- 유저별 평가횟수 -->
+	<select id="getUserRecCount" parameterType="long" resultType="long">
+		select count(user_no) as cnt from tb_recommend where user_no=#{user_no}
+	</select>
+	
+	<select id="getUserInfo" parameterType="long" resultType="UserVO">
+		select *
+		from tb_user
+		where user_no = #{user_no}
+	</select> 
+	
+	
+	<select id="getUserRecommendList" parameterType="long" resultType="java.util.Map">
+		select distinct r.song_key, s.song_name, s.album_name, s.play_time, s.is_title_song,s.is_adult,s.issue_date,s.album_key, s.album_img, s.artist_name,s.artist_key, r.star_point, r.user_comment
+		from tb_recommend r join tb_song s
+		on r.song_key = s.song_key
+		where r.user_comment is not null and r.user_no = #{user_no} and r.song_key != 0
+		order by r.recommend_no desc
+	</select>
+	
+	<select id="getUserRecommendListAlbum" parameterType="long" resultType="java.util.Map">
+		select distinct r.album_key,  a.album_name, a.album_key, a.issue_date,a.album_img, a.artist_key,a.artist_name,r.star_point, r.user_no, r.user_comment
+		from tb_recommend r join tb_album a
+		on r.album_key = a.album_key
+		where r.user_comment is not null and r.user_no = #{user_no} and r.song_key = 0
+		order by r.recommend_no desc
+	</select>
+	
+	<select id="isFollow" parameterType="java.util.HashMap" resultType="long">
+		select count(friend_no) as cnt
+		from tb_friend
+		where user_no = #{user_no} and friend_user_no = #{friend_user_no}
+	</select>
+	
+	<insert id="addFollow" parameterType="java.util.HashMap">
+		insert into tb_friend(user_no, friend_user_no)
+		values(#{user_no}, #{friend_user_no})
+	</insert>
+	
+	<select id="getFollowerList" parameterType="long" resultType="java.util.HashMap">
+		select u.user_no, u.user_nick,u.user_img,u.user_id
+		from tb_user u join tb_friend f
+		on u.user_no = f.user_no
+		where f.friend_user_no = #{user_no}
+	</select>
+	
+	<select id="getFollowingList" parameterType="long" resultType="java.util.HashMap">
+		select u.user_no,u.user_nick,u.user_img,u.user_id
+		from tb_user u join tb_friend f
+		on u.user_no = f.friend_user_no
+		where f.user_no = #{user_no}
+	</select>
+	
+	<delete id="unFollow" parameterType="java.util.HashMap">
+		delete
+		from tb_friend
+		where user_no = #{user_no} and friend_user_no = #{friend_user_no}
+	</delete>
+	
+	<select id='getSearchFollowList' parameterType="String" resultType="UserVO">
+		select distinct user_no, user_nick, user_id, user_img
+		from tb_user
+		where user_id like CONCAT('%',#{search_keyword},'%') or user_nick like CONCAT('%',#{search_keyword},'%')
+		
+		
+	</select>
+	
+</mapper>
